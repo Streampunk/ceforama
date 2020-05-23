@@ -11,6 +11,7 @@
 #include <locale>
 #include <exception>
 #include <inttypes.h>
+#include <iostream>
 #include "node_api.h"
 
 #define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
