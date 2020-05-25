@@ -2,8 +2,9 @@
   "targets": [{
     "target_name" : "ceforama",
     "sources" : [
-	  "src/cxx/ceforama.cpp",
-    "src/cxx/ceforama_util.cpp"
+	    "src/cxx/ceforama.cpp",
+      "src/cxx/client.cpp",
+      "src/cxx/ceforama_util.cpp",
 	],
     "conditions": [
       ['OS=="win"', {
@@ -22,7 +23,8 @@
           "include"
         ],
         "libraries": [
-          "-l../lib/Release/libcef"
+          "-l../lib/Release/libcef",
+          "-l../lib/Release/libcef_dll_wrapper"
         ],
         "copies": [
             {
