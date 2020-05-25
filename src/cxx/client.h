@@ -10,8 +10,11 @@
 #include "node_api.h"
 
 napi_value client(napi_env env, napi_callback_info info);
+napi_value framePromise(napi_env env, napi_callback_info info);
+void frameResolver(napi_env env, napi_value jsCb, void* context, void* data);
+void paintoramaTsFnFinalize(napi_env env, void* data, void* hint);
 
-class ceforama
+class clientorama
     : public CefClient,
       public CefRenderHandler,
       public CefLifeSpanHandler,
@@ -19,15 +22,16 @@ class ceforama
       public CefDisplayHandler
 { 
     CefRefPtr<CefBrowser> browser;
+
+public:
     int width;
     int height;
     double fps;
     std::string url;
     napi_threadsafe_function tsFn;
 
-public:
-    ceforama();
-    ~ceforama();
+    clientorama();
+    ~clientorama();
 
     CefRefPtr<CefBrowserHost> get_browser_host() const;
 
@@ -81,7 +85,14 @@ private:
 
     CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
 
-    IMPLEMENT_REFCOUNTING(ceforama);
+    IMPLEMENT_REFCOUNTING(clientorama);
+};
+
+struct clientCarrier : carrier {
+    clientorama* client = nullptr;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    double fps = 0.0;
 };
 
 #endif

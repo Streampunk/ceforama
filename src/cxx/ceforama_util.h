@@ -96,4 +96,6 @@ int32_t rejectStatus(napi_env env, carrier* c, char* file, int32_t line);
   REJECT_RETURN; \
 }
 
+napi_value nop(napi_env env, napi_callback_info info);
+
 #endif // CEFORMAMA
