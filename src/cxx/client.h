@@ -12,6 +12,7 @@
 napi_value client(napi_env env, napi_callback_info info);
 napi_value framePromise(napi_env env, napi_callback_info info);
 void frameResolver(napi_env env, napi_value jsCb, void* context, void* data);
+void clientFinalize(napi_env env, void* data, void* hint);
 void paintoramaTsFnFinalize(napi_env env, void* data, void* hint);
 
 class clientorama
@@ -34,6 +35,8 @@ public:
     ~clientorama();
 
     CefRefPtr<CefBrowserHost> get_browser_host() const;
+
+    void close();
 
 private:
     void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
@@ -89,10 +92,11 @@ private:
 };
 
 struct clientCarrier : carrier {
-    clientorama* client = nullptr;
+    CefRefPtr<clientorama> client = nullptr;
     uint32_t width = 0;
     uint32_t height = 0;
     double fps = 0.0;
+    std::string url;
 };
 
 #endif

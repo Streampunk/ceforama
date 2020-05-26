@@ -13,6 +13,13 @@ CefRefPtr<CefBrowserHost> clientorama::get_browser_host() const
     return nullptr;
 }
 
+void clientorama::close()
+{
+    if (browser != nullptr) {
+        browser->GetHost()->CloseBrowser(true);
+    }
+}
+
 void clientorama::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 {
     browser = std::move(browser);
@@ -106,6 +113,19 @@ void clientExecute(napi_env env, void* data) {
     c->client->width = c->width;
     c->client->height = c->height;
     c->client->fps = c->fps;
+    c->client->url = std::string(c->url);
+
+    CefWindowInfo windowInfo;
+    windowInfo.width = c->width;
+    windowInfo.height = c->height;
+    windowInfo.windowless_rendering_enabled = true;
+    windowInfo.shared_texture_enabled = false;
+
+    CefBrowserSettings browserSettings;
+    browserSettings.web_security = cef_state_t::STATE_DISABLED;
+    browserSettings.web_security = cef_state_t::STATE_DISABLED;
+    browserSettings.windowless_frame_rate = int(ceil(c->fps));
+    CefBrowserHost::CreateBrowser(windowInfo, c->client.get(), c->client->url, browserSettings, nullptr, nullptr);
 }
 
 void clientComplete(napi_env env, napi_status asyncStatus, void* data) {
@@ -125,6 +145,21 @@ void clientComplete(napi_env env, napi_status asyncStatus, void* data) {
     c->status = napi_set_named_property(env, result, "type", param);
     REJECT_STATUS;
 
+    c->status = napi_create_int32(env, c->width, &param);
+    REJECT_STATUS;
+    c->status = napi_set_named_property(env, result, "width", param);
+    REJECT_STATUS;
+
+    c->status = napi_create_int32(env, c->height, &param);
+    REJECT_STATUS;
+    c->status = napi_set_named_property(env, result, "height", param);
+    REJECT_STATUS;
+
+    c->status = napi_create_int32(env, int(ceil(c->fps)), &param);
+    REJECT_STATUS;
+    c->status = napi_set_named_property(env, result, "fps", param);
+    REJECT_STATUS;
+
     c->status = napi_create_function(env, "frame", NAPI_AUTO_LENGTH, framePromise,
         nullptr, &param);
     REJECT_STATUS;
@@ -139,7 +174,7 @@ void clientComplete(napi_env env, napi_status asyncStatus, void* data) {
         20, 1, nullptr, paintoramaTsFnFinalize, c->client, frameResolver, &c->client->tsFn);
     REJECT_STATUS;
 
-    c->status = napi_create_external(env, c->client, nullptr, nullptr, &param);
+    c->status = napi_create_external(env, c->client, clientFinalize, nullptr, &param);
     REJECT_STATUS;
     c->status = napi_set_named_property(env, result, "_external", param);
     REJECT_STATUS;
@@ -152,6 +187,36 @@ void clientComplete(napi_env env, napi_status asyncStatus, void* data) {
 }
 
 napi_value client(napi_env env, napi_callback_info info) {
+    napi_value options, param, promise, resourceName;
+    napi_valuetype type;
+    bool isArray;
+    clientCarrier* c = new clientCarrier;
+
+    c->status = napi_create_promise(env, &c->_deferred, &promise);
+    REJECT_RETURN;
+
+    size_t argc = 1;
+    napi_value args[1];
+    c->status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    REJECT_RETURN;
+
+    if (argc >= 1) {
+        c->status = napi_typeof(env, args[0], &type);
+        REJECT_RETURN;
+        c->status = napi_is_array(env, args[0], &isArray);
+        REJECT_RETURN;
+        if ((type != napi_object) || (isArray == true)) REJECT_ERROR_RETURN(
+            "Options provided to capture create must be an object and not an array.",
+            CEFORAMA_INVALID_ARGS);
+        options = args[0];
+    } 
+    else {
+        c->status = napi_create_object(env, &options);
+        REJECT_RETURN;
+    }
+
+
+
     return nullptr;
 }
 
@@ -161,6 +226,13 @@ napi_value framePromise(napi_env env, napi_callback_info info) {
 
 void frameResolver(napi_env env, napi_value jsCb, void* context, void* data) {
 
+}
+
+void clientFinalize(napi_env env, void* data, void* hint) {
+    clientorama* client = (clientorama*) data;
+    if (client != nullptr) {
+        client->close();
+    }
 }
 
 void paintoramaTsFnFinalize(napi_env env, void* data, void* hint) {

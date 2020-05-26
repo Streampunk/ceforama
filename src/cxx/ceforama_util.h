@@ -22,7 +22,8 @@ napi_status checkStatus(napi_env env, napi_status status,
   const char* file, uint32_t line);
 
 // Async error handling
-#define CEFORAMA_ERROR_START 6000
+#define CEFORAMA_ERROR_START 9000
+#define CEFORAMA_INVALID_ARGS 9001
 #define CEFORAMA_SUCCESS 0
 
 #define NAPI_THROW_ERROR(msg) { \
