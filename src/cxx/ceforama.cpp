@@ -20,7 +20,7 @@ napi_value Init(napi_env env, napi_value exports) {
         DECLARE_NAPI_METHOD("version", version),
         DECLARE_NAPI_METHOD("client", client)
     };
-    status = napi_define_properties(env, exports, 1, desc);
+    status = napi_define_properties(env, exports, 2, desc);
     CHECK_STATUS;
 
     return exports;

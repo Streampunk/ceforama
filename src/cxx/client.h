@@ -93,10 +93,15 @@ private:
 
 struct clientCarrier : carrier {
     CefRefPtr<clientorama> client = nullptr;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    double fps = 0.0;
+    uint32_t width = 1920;
+    uint32_t height = 1080;
+    double fps = 25.0;
     std::string url;
+};
+
+struct frameData {
+    void* frame;
+    size_t size;
 };
 
 #endif
