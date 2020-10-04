@@ -8,26 +8,33 @@ clientorama::~clientorama() { }
 
 CefRefPtr<CefBrowserHost> clientorama::get_browser_host() const
 {
-    if (browser != nullptr)
-        return browser->GetHost();
+    if (browser_ != nullptr)
+        return browser_->GetHost();
     return nullptr;
+}
+
+void clientorama::update() {
+    if (browser_)
+		browser_->GetMainFrame()->SendProcessMessage(
+			CefProcessId::PID_RENDERER,
+			CefProcessMessage::Create("CeforamaTick"));
 }
 
 void clientorama::close()
 {
-    if (browser != nullptr) {
-        browser->GetHost()->CloseBrowser(true);
+    if (browser_ != nullptr) {
+        browser_->GetHost()->CloseBrowser(true);
     }
 }
 
 void clientorama::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 {
-    browser = std::move(browser);
+    browser_ = browser;
 }
 
 void clientorama::OnBeforeClose(CefRefPtr<CefBrowser> browser)
 {
-    browser = nullptr;
+    browser_ = nullptr;
 }
 
 bool clientorama::DoClose(CefRefPtr<CefBrowser> browser)
@@ -50,6 +57,7 @@ void clientorama::OnPaint(CefRefPtr<CefBrowser> browser,
                        int                   height)
 {
     napi_status status, hangover;
+    printf("OnPaint!\n");
     status = napi_acquire_threadsafe_function(tsFn);
     if (status != napi_ok) {
         printf("DEBUG: Failed to acquire NAPI threadsafe on paint.");
@@ -67,7 +75,7 @@ void clientorama::OnPaint(CefRefPtr<CefBrowser> browser,
 
     status = napi_release_threadsafe_function(tsFn, napi_tsfn_release);
     if (status != napi_ok) {
-        printf("DEBUG: Failed to release NAP)I threadsafe function on paint.");
+        printf("DEBUG: Failed to release NAPI threadsafe function on paint.");
     }
 }
 
@@ -307,11 +315,87 @@ napi_value client(napi_env env, napi_callback_info info) {
 }
 
 napi_value framePromise(napi_env env, napi_callback_info info) {
-    return nullptr;
+    napi_value promise, cef, param;
+    clientorama* client;
+    frameCarrier* c = new frameCarrier;
+    
+    c->status = napi_create_promise(env, &c->_deferred, &promise);
+    REJECT_RETURN;
+
+    size_t argc = 0;
+    c->status = napi_get_cb_info(env, info, &argc, nullptr, &cef, nullptr);
+    REJECT_RETURN;
+
+    c->status = napi_get_named_property(env, cef, "_external", &param);
+    REJECT_RETURN;
+    c->status = napi_get_value_external(env, param, (void **) &client);
+    REJECT_RETURN;
+
+    client->update();
+    client->framePromises.push(c);
+    return promise;
 }
 
 void frameResolver(napi_env env, napi_value jsCb, void* context, void* data) {
+    napi_value result, param;
+    clientorama* client = (clientorama*) context;
+    frameData* frameCopy = (frameData*) data;
+    frameCarrier* c = nullptr;
+    int64_t externalMemory;
 
+    uint32_t seq = client->frameCount++;
+    if (!client->framePromises.empty()) {
+        c = client->framePromises.front();
+
+        c->status = napi_create_object(env, &result);
+        REJECT_BAIL;
+        c->status = napi_create_string_utf8(env, "frame", NAPI_AUTO_LENGTH, &param);
+        REJECT_BAIL;
+        c->status = napi_set_named_property(env, result, "type", param);
+        REJECT_BAIL;
+
+        c->status = napi_create_int32(env, client->width, &param);
+        REJECT_BAIL;
+        c->status = napi_set_named_property(env, result, "width", param);
+        REJECT_BAIL;
+
+        c->status = napi_create_int32(env, client->height, &param);
+        REJECT_BAIL;
+        c->status = napi_set_named_property(env, result, "height", param);
+        REJECT_BAIL;
+
+        c->status = napi_create_int32(env, frameCopy->size, &param);
+        REJECT_BAIL;
+        c->status = napi_set_named_property(env, result, "size", param);
+        REJECT_BAIL;
+
+        c->status = napi_create_uint32(env, seq, &param);
+        REJECT_BAIL;
+        c->status = napi_set_named_property(env, result, "seq", param);
+        REJECT_BAIL;
+
+        c->status = napi_create_external_buffer(env, frameCopy->size, frameCopy->frame, 
+            frameFinalize, frameCopy, &param);
+        REJECT_BAIL;
+        c->status = napi_set_named_property(env, result, "frame", param);
+        REJECT_BAIL;
+        c->status = napi_adjust_external_memory(env, frameCopy->size, &externalMemory);
+        // printf("External memory %li\n", externalMemory);
+        REJECT_BAIL;
+
+        c->status = napi_resolve_deferred(env, c->_deferred, result);
+        REJECT_BAIL;
+        tidyCarrier(env, c);
+    }
+    else {
+        printf("DEBUG: No promise to receive frame.\n");
+    }
+
+bail:
+    if (!client->framePromises.empty()) client->framePromises.pop();
+    // free(frameCopy); // Do in finalize
+
+    return;
 }
 
 void clientFinalize(napi_env env, void* data, void* hint) {
@@ -323,4 +407,14 @@ void clientFinalize(napi_env env, void* data, void* hint) {
 
 void paintoramaTsFnFinalize(napi_env env, void* data, void* hint) {
     free((frameData*) data);
+}
+
+void frameFinalize(napi_env env, void* finalize_data, void* finalize_hint) {
+    napi_status status;
+    int64_t externalMemory;
+    frameData* frame = (frameData *) finalize_hint;
+    status = napi_adjust_external_memory(env, -((int32_t) frame->size), &externalMemory);
+    FLOATING_STATUS;
+    free(frame->frame);
+    free(frame);
 }

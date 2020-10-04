@@ -14,6 +14,12 @@ napi_value framePromise(napi_env env, napi_callback_info info);
 void frameResolver(napi_env env, napi_value jsCb, void* context, void* data);
 void clientFinalize(napi_env env, void* data, void* hint);
 void paintoramaTsFnFinalize(napi_env env, void* data, void* hint);
+void frameFinalize(napi_env env, void* data, void* hint);
+const std::string TICK_MESSAGE_NAME = "CasparCGTick";
+
+struct frameCarrier : carrier {
+    ~frameCarrier() { }
+};
 
 class clientorama
     : public CefClient,
@@ -22,7 +28,7 @@ class clientorama
       public CefLoadHandler,
       public CefDisplayHandler
 { 
-    CefRefPtr<CefBrowser> browser;
+    CefRefPtr<CefBrowser> browser_ = nullptr;
 
 public:
     int width;
@@ -30,12 +36,16 @@ public:
     double fps;
     std::string url;
     napi_threadsafe_function tsFn;
+    uint32_t frameCount = 0;
+
+    std::queue<frameCarrier*> framePromises;
 
     clientorama();
     ~clientorama();
 
     CefRefPtr<CefBrowserHost> get_browser_host() const;
 
+    void update();
     void close();
 
 private:
