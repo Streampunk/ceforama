@@ -1,4 +1,5 @@
-const quantel = require('../build/Release/ceforama')
+const ceforama = require('../build/Release/ceforama')
 
 console.log("CEForama!!!!!!!!!!!")
 
+export default ceforama

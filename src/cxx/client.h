@@ -16,6 +16,7 @@ void clientFinalize(napi_env env, void* data, void* hint);
 void paintoramaTsFnFinalize(napi_env env, void* data, void* hint);
 void frameFinalize(napi_env env, void* data, void* hint);
 const std::string TICK_MESSAGE_NAME = "CasparCGTick";
+const std::string REMOVE_MESSAGE_NAME = "CasparCGRemove";
 
 struct frameCarrier : carrier {
     ~frameCarrier() { }
