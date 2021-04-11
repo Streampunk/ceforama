@@ -45,7 +45,7 @@ bool clientorama::DoClose(CefRefPtr<CefBrowser> browser)
 void clientorama::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect)
 {
     // TODO confirm on the correct thread
-
+    printf("Get view rect\n");
     rect = CefRect(0, 0, this->width, this->height);
 }
     
@@ -102,6 +102,7 @@ bool clientorama::OnProcessMessageReceived(CefRefPtr<CefBrowser>        browser,
                                         CefProcessId                 source_process,
                                         CefRefPtr<CefProcessMessage> message) 
 {
+    printf("OnProcessMessageReceived");
     // FIXME - implement
     return false;
 } 
@@ -153,6 +154,7 @@ void clientExecute(napi_env env, void* data) {
     browserSettings.web_security = cef_state_t::STATE_DISABLED;
     browserSettings.windowless_frame_rate = int(ceil(c->fps));
     CefBrowserHost::CreateBrowser(windowInfo, c->client.get(), c->client->url, browserSettings, nullptr, nullptr);
+    printf("Browser created\n");
 }
 
 void clientComplete(napi_env env, napi_status asyncStatus, void* data) {

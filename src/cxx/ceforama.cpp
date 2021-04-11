@@ -2,6 +2,7 @@
 #include <queue>
 #include "ceforama_util.h"
 #include "client.h"
+#include "loop.h"
 
 napi_value version(napi_env env, napi_callback_info info) {
     napi_status status;
@@ -148,6 +149,7 @@ public:
 		command_line->AppendSwitch("enable-begin-frame-scheduling");
 		command_line->AppendSwitch("enable-media-stream");
 		command_line->AppendSwitch("single-process");
+		// command_line->AppendSwitchWithValue("multi_threaded_message_loop", "1");
 
 		if (process_type.empty() && !enable_gpu_)
 		{
@@ -190,9 +192,12 @@ napi_value Init(napi_env env, napi_value exports) {
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_METHOD("version", version),
-        DECLARE_NAPI_METHOD("client", client)
+        DECLARE_NAPI_METHOD("client", client),
+		DECLARE_NAPI_METHOD("startLoop", startLoop),
+		DECLARE_NAPI_METHOD("stopLoop", stopLoop),
+		DECLARE_NAPI_METHOD("doWork", doWork)
     };
-    status = napi_define_properties(env, exports, 2, desc);
+    status = napi_define_properties(env, exports, 5, desc);
     CHECK_STATUS;
 
     const bool enable_gpu = false;
@@ -202,6 +207,7 @@ napi_value Init(napi_env env, napi_value exports) {
 	settings.no_sandbox = true;
 	settings.remote_debugging_port = 4242;
 	settings.windowless_rendering_enabled = true;
+	settings.multi_threaded_message_loop = true;
    
 	// CefString(&settings.resources_dir_path) = ".";
 	// CefString(&settings.locales_dir_path) = "./locales";

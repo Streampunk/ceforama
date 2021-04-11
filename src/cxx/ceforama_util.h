@@ -24,6 +24,7 @@ napi_status checkStatus(napi_env env, napi_status status,
 // Async error handling
 #define CEFORAMA_ERROR_START 9000
 #define CEFORAMA_INVALID_ARGS 9001
+#define CEFORAMA_LOOP_STATE 9002
 #define CEFORAMA_SUCCESS 0
 
 #define NAPI_THROW_ERROR(msg) { \
@@ -32,36 +33,6 @@ napi_status checkStatus(napi_env env, napi_status status,
   napi_throw_error(env, nullptr, errorMsg); \
   return nullptr; \
 }
-
-// #define NAPI_THROW_CORBA_EXCEPTION(ex) { \
-//   char errorMsg[256]; \
-//   snprintf(errorMsg, 256, "Exception thrown from CORBA subsystem: %s.", ex._name()); \
-//   napi_throw_error(env, nullptr, errorMsg); \
-//   return nullptr; \
-// }
-
-// #define NAPI_REJECT_CORBA_EXCEPTION(ex) { \
-// 	char errorMsg[256]; \
-// 	snprintf(errorMsg, 256, "Exception thrown from CORBA subsystem: %s.", ex._name()); \
-// 	c->errorMsg = std::string(errorMsg); \
-// 	c->status = QGW_CORBA_EXCEPTION; \
-// 	return; \
-// }
-
-// #define NAPI_THROW_FATAL_EXCEPTION(fe) { \
-//   char errorMsg[512]; \
-//   snprintf(errorMsg, 512, "Omni ORB fatal exception thrown at line %i of %s: %s.", fe.line(), fe.file(), fe.errmsg()); \
-//   napi_throw_error(env, nullptr, errorMsg); \
-//   return nullptr; \
-// }
-
-// #define NAPI_REJECT_FATAL_EXCEPTION(fe) { \
-// 	char errorMsg[512]; \
-// 	snprintf(errorMsg, 512, "Omni ORB fatal exception thrown at line %i of %s: %s.", fe.line(), fe.file(), fe.errmsg()); \
-// 	c->errorMsg = std::string(errorMsg); \
-// 	c->status = QGW_FATAL_EXCEPTION; \
-// 	return; \
-// }
 
 struct carrier {
   napi_ref passthru = nullptr;

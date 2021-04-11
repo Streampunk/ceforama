@@ -4,6 +4,7 @@
     "sources" : [
 	    "src/cxx/ceforama.cpp",
       "src/cxx/client.cpp",
+      "src/cxx/loop.cpp",
       "src/cxx/ceforama_util.cpp",
 	],
     "conditions": [
