@@ -57,7 +57,7 @@ void clientorama::OnPaint(CefRefPtr<CefBrowser> browser,
                        int                   height)
 {
     napi_status status, hangover;
-    printf("OnPaint!\n");
+    printf("OnPaint! width=%i height=%i\n", width, height);
     status = napi_acquire_threadsafe_function(tsFn);
     if (status != napi_ok) {
         printf("DEBUG: Failed to acquire NAPI threadsafe on paint.");
@@ -133,6 +133,13 @@ CefRefPtr<CefLifeSpanHandler> clientorama::GetLifeSpanHandler() { return this; }
 CefRefPtr<CefLoadHandler> clientorama::GetLoadHandler() { return this; }
 
 CefRefPtr<CefDisplayHandler> clientorama::GetDisplayHandler() { return this; }
+
+void clientorama::OnLoadEnd(
+			CefRefPtr<CefBrowser> browser,
+			CefRefPtr<CefFrame> frame,
+			int httpStatusCode) {
+    printf("OnLoadEnd ... code=%i\n", httpStatusCode);
+}
 
 void clientExecute(napi_env env, void* data) {
     clientCarrier* c = (clientCarrier*) data;
@@ -388,14 +395,21 @@ void frameResolver(napi_env env, napi_value jsCb, void* context, void* data) {
         c->status = napi_resolve_deferred(env, c->_deferred, result);
         REJECT_BAIL;
         tidyCarrier(env, c);
+        client->framePromises.pop();
+        return;
     }
     else {
         printf("DEBUG: No promise to receive frame.\n");
+        free(frameCopy->frame);
+        free(frameCopy);
+        return;
     }
 
 bail:
+    printf("Paintorama bailout\n");
     if (!client->framePromises.empty()) client->framePromises.pop();
-    // free(frameCopy); // Do in finalize
+    free(frameCopy->frame);
+    free(frameCopy);
 
     return;
 }
@@ -408,7 +422,9 @@ void clientFinalize(napi_env env, void* data, void* hint) {
 }
 
 void paintoramaTsFnFinalize(napi_env env, void* data, void* hint) {
-    free((frameData*) data);
+    printf("Paintorama finalize - doing nothing!\n");
+    // frameData* frameCopy = (frameData*) data;
+
 }
 
 void frameFinalize(napi_env env, void* finalize_data, void* finalize_hint) {

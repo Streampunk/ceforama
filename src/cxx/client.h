@@ -99,6 +99,10 @@ private:
 
     CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
 
+    void OnLoadEnd(CefRefPtr<CefBrowser> browser,
+                         CefRefPtr<CefFrame> frame,
+                         int httpStatusCode) override;
+
     IMPLEMENT_REFCOUNTING(clientorama);
 };
 

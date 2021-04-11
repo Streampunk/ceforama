@@ -8,3 +8,4 @@ export interface ClientOptions {
 export interface CeforamaClient {
 }
 export declare function client(options?: ClientOptions): CeforamaClient;
+export declare function test(): Promise<void>;
