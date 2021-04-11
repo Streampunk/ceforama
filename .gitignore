@@ -105,3 +105,8 @@ dist
 
 # Ignore lib for now
 lib/*
+
+# Don't checkin dist
+dist/*
+
+GPUCache/*
