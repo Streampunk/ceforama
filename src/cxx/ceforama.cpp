@@ -207,7 +207,8 @@ napi_value Init(napi_env env, napi_value exports) {
 	settings.no_sandbox = true;
 	settings.remote_debugging_port = 4242;
 	settings.windowless_rendering_enabled = true;
-	settings.multi_threaded_message_loop = true;
+	// settings.multi_threaded_message_loop = true;
+	// settings.external_message_pump = 1;
    
 	// CefString(&settings.resources_dir_path) = ".";
 	// CefString(&settings.locales_dir_path) = "./locales";

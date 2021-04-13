@@ -44,8 +44,8 @@ bool clientorama::DoClose(CefRefPtr<CefBrowser> browser)
     
 void clientorama::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect)
 {
+    printf("Get view rect: currently on %i %i\n", TID_UI, CefCurrentlyOn(TID_UI));
     // TODO confirm on the correct thread
-    printf("Get view rect\n");
     rect = CefRect(0, 0, this->width, this->height);
 }
     
@@ -57,7 +57,7 @@ void clientorama::OnPaint(CefRefPtr<CefBrowser> browser,
                        int                   height)
 {
     napi_status status, hangover;
-    printf("OnPaint! width=%i height=%i\n", width, height);
+    printf("OnPaint! width=%i height=%i TID_UI=%i\n", width, height, TID_UI);
     status = napi_acquire_threadsafe_function(tsFn);
     if (status != napi_ok) {
         printf("DEBUG: Failed to acquire NAPI threadsafe on paint.");
@@ -67,7 +67,9 @@ void clientorama::OnPaint(CefRefPtr<CefBrowser> browser,
     frameData* frameCopy = (frameData*) malloc(sizeof(frameData));
     frameCopy->size = width * height * 4;
     frameCopy->frame = (void*) malloc(frameCopy->size);
-    memcmp(frameCopy->frame, buffer, frameCopy->size);
+    printf("Malloc'd frame\n");
+    memcpy(frameCopy->frame, buffer, frameCopy->size);
+    printf("memcpy done\n");
     hangover = napi_call_threadsafe_function(tsFn, frameCopy, napi_tsfn_nonblocking);
     if (hangover != napi_ok) {
         printf("DEBUG: Failed to call NAPI threadsafe function on paint.");

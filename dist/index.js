@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.test = exports.client = exports.isLoopRunning = exports.stopLoop = exports.runLoop = exports.doWork = exports.version = void 0;
 const ceforamaNative = require('../build/Release/ceforama');
+const fs = require('fs');
 function version() {
     return ceforamaNative.version();
 }
@@ -13,10 +14,10 @@ exports.doWork = doWork;
 let loopRunning = false;
 const loopy = () => {
     if (loopRunning) {
-        setImmediate(() => {
+        setTimeout(() => {
             ceforamaNative.doWork();
             loopy();
-        });
+        }, 0);
     }
 };
 function runLoop() {
@@ -41,9 +42,10 @@ function client(options) {
 }
 exports.client = client;
 async function test() {
-    let cl = await ceforamaNative.client({ url: 'https://raw.githubusercontent.com/chromiumembedded/cef-project/master/CMakeLists.txt' });
+    let cl = await ceforamaNative.client({ url: 'https://app.singular.live/output/5AJz1INQDZ8EmHunA5H3et/Default?aspect=16:9' });
+    let fr;
     for (let x = 0; x < 100; x++) {
-        let fr = await cl.frame();
+        fr = await cl.frame();
         let isBlack = true;
         for (let y = 0; y < fr.frame.length; y++) {
             if (fr.frame[y] !== 0) {
@@ -51,8 +53,12 @@ async function test() {
                 break;
             }
         }
-        console.log(fr.seq, isBlack);
+        console.log(fr.seq, isBlack, fr.frame.length);
+        if ((x - 9) % 10 === 0) {
+            fs.writeFileSync(`test-${x}.rgba`, fr.frame);
+        }
     }
-    console.log('Done asking!');
+    console.log('Done asking!', fr.frame.length);
+    fs.writeFileSync('test.rgba', fr.frame);
 }
 exports.test = test;
