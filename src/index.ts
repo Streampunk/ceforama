@@ -52,20 +52,24 @@ export function client(options?: ClientOptions): CeforamaClient {
 export async function test() {
     let cl = await ceforamaNative.client({ url: 'https://app.singular.live/output/5AJz1INQDZ8EmHunA5H3et/Default?aspect=16:9' })
     let fr
-    for ( let x = 0 ; x < 100 ; x++ ) {
+    let updater
+    let start = process.hrtime();
+    for ( let x = 0 ; x < 1000 ; x++ ) {
         fr = await cl.frame();
-        let isBlack = true
-        for ( let y = 0 ; y < fr.frame.length; y++ ) {
-            if (fr.frame[y] !== 0) {
-                isBlack = false;
-                break;
-            }
-        }
-        console.log(fr.seq, isBlack, fr.frame.length);
-        if ((x - 9) % 10 === 0) {
-            fs.writeFileSync(`test-${x}.rgba`, fr.frame)
-        }
+        if (x === 3) { updater = setInterval(() => cl.update(), 40) }
+        // let isBlack = true
+        // for ( let y = 0 ; y < fr.frame.length; y++ ) {
+        //     if (fr.frame[y] !== 0) {
+        //         isBlack = false;
+        //         break;
+        //     }
+        // }
+        console.log(fr.seq, process.hrtime(start), fr.frame.length);
+        // if ((x - 9) % 10 === 0) {
+        //     fs.writeFileSync(`test-${x}.rgba`, fr.frame)
+        // }
     }
     console.log('Done asking!', fr.frame.length)
     fs.writeFileSync('test.rgba', fr.frame)
+    if (updater) clearInterval(updater)
 }

@@ -70,4 +70,7 @@ int32_t rejectStatus(napi_env env, carrier* c, char* file, int32_t line);
 
 napi_value nop(napi_env env, napi_callback_info info);
 
-#endif // CEFORMAMA
+const std::string TICK_MESSAGE_NAME = "CeforamaTick";
+const std::string REMOVE_MESSAGE_NAME = "CeforamaRemove";
+
+#endif // CEFORAMA

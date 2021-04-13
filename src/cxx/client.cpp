@@ -14,10 +14,18 @@ CefRefPtr<CefBrowserHost> clientorama::get_browser_host() const
 }
 
 void clientorama::update() {
-    if (browser_)
-		browser_->GetMainFrame()->SendProcessMessage(
-			CefProcessId::PID_RENDERER,
-			CefProcessMessage::Create("CeforamaTick"));
+    // printf("In update\n");
+    try {
+        if (browser_) {
+            browser_->GetMainFrame()->SendProcessMessage(
+                CefProcessId::PID_BROWSER,
+                CefProcessMessage::Create(TICK_MESSAGE_NAME));
+        }
+    }
+    catch (const std::exception &exc) {
+        std::cerr << exc.what();
+    }
+    // printf("Sent tick message\n");
 }
 
 void clientorama::close()
@@ -30,6 +38,7 @@ void clientorama::close()
 void clientorama::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 {
     browser_ = browser;
+    browser_->GetHost()->SetWindowlessFrameRate(fps);
 }
 
 void clientorama::OnBeforeClose(CefRefPtr<CefBrowser> browser)
@@ -209,6 +218,12 @@ void clientComplete(napi_env env, napi_status asyncStatus, void* data) {
     c->status = napi_set_named_property(env, result, "frame", param);
     REJECT_STATUS;
 
+    c->status = napi_create_function(env, "update", NAPI_AUTO_LENGTH, update,
+        nullptr, &param);
+    REJECT_STATUS;
+    c->status = napi_set_named_property(env, result, "update", param);
+    REJECT_STATUS;
+    
     c->status = napi_create_string_utf8(env, "paintorama", NAPI_AUTO_LENGTH, &asyncName);
     REJECT_STATUS;
     c->status = napi_create_function(env, "nop", NAPI_AUTO_LENGTH, nop, nullptr, &param);
@@ -416,6 +431,26 @@ bail:
     return;
 }
 
+napi_value update(napi_env env, napi_callback_info info) {
+    napi_value promise, cef, param;
+    clientorama* client;
+    frameCarrier* c = new frameCarrier;
+
+    size_t argc = 0;
+    c->status = napi_get_cb_info(env, info, &argc, nullptr, &cef, nullptr);
+    REJECT_RETURN;
+
+    c->status = napi_get_named_property(env, cef, "_external", &param);
+    REJECT_RETURN;
+    c->status = napi_get_value_external(env, param, (void **) &client);
+    REJECT_RETURN;
+
+    // printf("Update called\n");
+    client->update();
+
+    return nullptr;
+}
+
 void clientFinalize(napi_env env, void* data, void* hint) {
     clientorama* client = (clientorama*) data;
     if (client != nullptr) {
@@ -435,6 +470,7 @@ void frameFinalize(napi_env env, void* finalize_data, void* finalize_hint) {
     frameData* frame = (frameData *) finalize_hint;
     status = napi_adjust_external_memory(env, -((int32_t) frame->size), &externalMemory);
     FLOATING_STATUS;
+    printf("frameFinalize\n");
     free(frame->frame);
     free(frame);
 }

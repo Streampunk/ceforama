@@ -11,12 +11,11 @@
 
 napi_value client(napi_env env, napi_callback_info info);
 napi_value framePromise(napi_env env, napi_callback_info info);
+napi_value update(napi_env env, napi_callback_info info);
 void frameResolver(napi_env env, napi_value jsCb, void* context, void* data);
 void clientFinalize(napi_env env, void* data, void* hint);
 void paintoramaTsFnFinalize(napi_env env, void* data, void* hint);
 void frameFinalize(napi_env env, void* data, void* hint);
-const std::string TICK_MESSAGE_NAME = "CasparCGTick";
-const std::string REMOVE_MESSAGE_NAME = "CasparCGRemove";
 
 struct frameCarrier : carrier {
     ~frameCarrier() { }

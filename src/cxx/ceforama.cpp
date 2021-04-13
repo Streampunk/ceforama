@@ -104,8 +104,9 @@ public:
 			}
 		)", CefString(), 1, ret, exception);
 
-		/* if (!injected)
-			caspar_log(browser, boost::log::trivial::error, "Could not inject javascript animation code."); */
+		if (!injected) {
+			printf("Could not inject javascript animation code.\n");
+		}
 	}
 
 	void OnContextReleased(
@@ -167,13 +168,17 @@ public:
 			CefProcessId source_process,
 			CefRefPtr<CefProcessMessage> message) override
 	{
+		// printf("OnProcessMessageReceived in browser\n");
+		// printf("\n");
 		if (message->GetName().ToString() == TICK_MESSAGE_NAME)
 		{
 			for (auto& context : contexts_)
 			{
 				CefRefPtr<CefV8Value> ret;
 				CefRefPtr<CefV8Exception> exception;
-				context->Eval("tickAnimations()", CefString(), 1, ret, exception);
+
+				bool tar = context->Eval("tickAnimations()", CefString(), 1, ret, exception);
+				// printf("About to eval tickAnimations() %i\n", tar);
 			}
 
 			return true;
