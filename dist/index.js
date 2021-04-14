@@ -42,7 +42,7 @@ function client(options) {
 }
 exports.client = client;
 async function test() {
-    let cl = await ceforamaNative.client({ url: 'https://app.singular.live/output/5AJz1INQDZ8EmHunA5H3et/Default?aspect=16:9' });
+    let cl = await client({ url: 'https://app.singular.live/output/5AJz1INQDZ8EmHunA5H3et/Default?aspect=16:9' });
     let fr;
     let updater;
     let start = process.hrtime();
@@ -63,8 +63,8 @@ async function test() {
         //     fs.writeFileSync(`test-${x}.rgba`, fr.frame)
         // }
     }
-    console.log('Done asking!', fr.frame.length);
-    fs.writeFileSync('test.rgba', fr.frame);
+    console.log('Done asking!', fr === null || fr === void 0 ? void 0 : fr.frame.length);
+    fs.writeFileSync('test.rgba', fr === null || fr === void 0 ? void 0 : fr.frame);
     if (updater)
         clearInterval(updater);
 }

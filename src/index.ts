@@ -38,11 +38,29 @@ export function isLoopRunning(): boolean {
 }
 
 export interface ClientOptions {
-
+    width?: number
+    height?: number
+    fps?: number
+    url: string
 }
 
 export interface CeforamaClient {
+    type: 'clientorama'
+    width: number
+    height: number
+    fps: number
+    url: string
+    frame: () => Promise<CeforamaFrame>
+    update: () => void
+}
 
+export interface CeforamaFrame {
+    type: 'frame'
+    width: number
+    height: number
+    size: number
+    seq: number
+    frame: Buffer
 }
 
 export function client(options?: ClientOptions): CeforamaClient {
@@ -50,7 +68,7 @@ export function client(options?: ClientOptions): CeforamaClient {
 }
 
 export async function test() {
-    let cl = await ceforamaNative.client({ url: 'https://app.singular.live/output/5AJz1INQDZ8EmHunA5H3et/Default?aspect=16:9' })
+    let cl = await client({ url: 'https://app.singular.live/output/5AJz1INQDZ8EmHunA5H3et/Default?aspect=16:9' })
     let fr
     let updater
     let start = process.hrtime();
@@ -69,7 +87,7 @@ export async function test() {
         //     fs.writeFileSync(`test-${x}.rgba`, fr.frame)
         // }
     }
-    console.log('Done asking!', fr.frame.length)
-    fs.writeFileSync('test.rgba', fr.frame)
+    console.log('Done asking!', fr?.frame.length)
+    fs.writeFileSync('test.rgba', fr?.frame)
     if (updater) clearInterval(updater)
 }

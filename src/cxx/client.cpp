@@ -18,7 +18,7 @@ void clientorama::update() {
     try {
         if (browser_) {
             browser_->GetMainFrame()->SendProcessMessage(
-                CefProcessId::PID_BROWSER,
+                CefProcessId::PID_RENDERER,
                 CefProcessMessage::Create(TICK_MESSAGE_NAME));
         }
     }
@@ -66,7 +66,7 @@ void clientorama::OnPaint(CefRefPtr<CefBrowser> browser,
                        int                   height)
 {
     napi_status status, hangover;
-    printf("OnPaint! width=%i height=%i TID_UI=%i\n", width, height, TID_UI);
+    // printf("OnPaint! width=%i height=%i TID_UI=%i\n", width, height, TID_UI);
     status = napi_acquire_threadsafe_function(tsFn);
     if (status != napi_ok) {
         printf("DEBUG: Failed to acquire NAPI threadsafe on paint.");
@@ -76,9 +76,9 @@ void clientorama::OnPaint(CefRefPtr<CefBrowser> browser,
     frameData* frameCopy = (frameData*) malloc(sizeof(frameData));
     frameCopy->size = width * height * 4;
     frameCopy->frame = (void*) malloc(frameCopy->size);
-    printf("Malloc'd frame\n");
+    // printf("Malloc'd frame\n");
     memcpy(frameCopy->frame, buffer, frameCopy->size);
-    printf("memcpy done\n");
+    // printf("memcpy done\n");
     hangover = napi_call_threadsafe_function(tsFn, frameCopy, napi_tsfn_nonblocking);
     if (hangover != napi_ok) {
         printf("DEBUG: Failed to call NAPI threadsafe function on paint.");
@@ -470,7 +470,7 @@ void frameFinalize(napi_env env, void* finalize_data, void* finalize_hint) {
     frameData* frame = (frameData *) finalize_hint;
     status = napi_adjust_external_memory(env, -((int32_t) frame->size), &externalMemory);
     FLOATING_STATUS;
-    printf("frameFinalize\n");
+    // printf("frameFinalize\n");
     free(frame->frame);
     free(frame);
 }
